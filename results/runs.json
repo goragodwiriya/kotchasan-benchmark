@@ -1,0 +1,29 @@
+{
+  "updated_at": "2026-09-02T08:45:33.567Z",
+  "runs": [
+    {
+      "dir": "2026-09-02-07-55",
+      "started_at": "2026-09-02T07:55:19.344Z",
+      "params": {
+        "RUNS": 5,
+        "DURATION": 10,
+        "WARMUP": 8,
+        "CONNECTIONS": 128
+      },
+      "git_commit": "53be07e0b87d8b6c45e7f1a0f0e604bb83dbd65c",
+      "has_info": true
+    },
+    {
+      "dir": "2026-09-02-07-25-",
+      "started_at": "2026-09-02-07-25-",
+      "params": {
+        "RUNS": 5,
+        "DURATION": 10,
+        "WARMUP": 8,
+        "CONNECTIONS": 128
+      },
+      "git_commit": "c7bcd7b41f1366212c7d342fc1c2a9d7358aeead",
+      "has_info": true
+    }
+  ]
+}

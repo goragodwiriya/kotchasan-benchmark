@@ -1,0 +1,9 @@
+{
+  "name": "kotchasan-benchmark-tools",
+  "private": true,
+  "type": "module",
+  "description": "Load generator tooling for the Kotchasan vs PHP frameworks benchmark",
+  "dependencies": {
+    "autocannon": "8.0.0"
+  }
+}

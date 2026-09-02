@@ -1,0 +1,107 @@
+name: kotchasan-benchmark
+
+services:
+  db:
+    image: mysql:8.4.6
+    environment:
+      MYSQL_ROOT_PASSWORD: rootbench
+      MYSQL_DATABASE: benchmark
+      MYSQL_USER: bench
+      MYSQL_PASSWORD: bench
+    volumes:
+      - ./infra/db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -prootbench --silent"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+    command:
+      - --innodb_buffer_pool_size=2G
+      - --innodb_log_file_size=512M
+      - --max_connections=300
+      # Avoid per-connection reverse DNS lookups (standard production tuning)
+      - --skip-name-resolve
+
+  nginx:
+    image: nginx:1.29.1
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "18081:8081"  # plain-php
+      - "18082:8082"  # kotchasan
+      - "18083:8083"  # slim
+      - "18084:8084"  # codeigniter
+      - "18085:8085"  # symfony
+      - "18086:8086"  # laravel
+    depends_on:
+      - plain
+      - kotchasan
+      - slim
+      - codeigniter
+      - symfony
+      - laravel
+
+  plain:
+    build:
+      context: .
+      dockerfile: infra/php/Dockerfile
+      args: { APP: plain-php }
+    environment: &app-env
+      BENCH_DB_HOST: db
+      BENCH_DB_PORT: "3306"
+      BENCH_DB_NAME: benchmark
+      BENCH_DB_USER: bench
+      BENCH_DB_PASS: bench
+    depends_on:
+      db:
+        condition: service_healthy
+
+  kotchasan:
+    build:
+      context: .
+      dockerfile: infra/php/Dockerfile
+      args: { APP: kotchasan }
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  slim:
+    build:
+      context: .
+      dockerfile: infra/php/Dockerfile
+      args: { APP: slim }
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  codeigniter:
+    build:
+      context: .
+      dockerfile: infra/php/Dockerfile
+      args: { APP: codeigniter }
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  symfony:
+    build:
+      context: .
+      dockerfile: infra/php/Dockerfile
+      args: { APP: symfony }
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  laravel:
+    build:
+      context: .
+      dockerfile: infra/php/Dockerfile
+      args: { APP: laravel }
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy

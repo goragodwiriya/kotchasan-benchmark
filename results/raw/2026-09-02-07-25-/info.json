@@ -1,0 +1,26 @@
+{
+  "plain-php": {
+    "peak_memory_bytes": 350056,
+    "included_files": 2
+  },
+  "kotchasan": {
+    "peak_memory_bytes": 360744,
+    "included_files": 27
+  },
+  "slim": {
+    "peak_memory_bytes": 382496,
+    "included_files": 79
+  },
+  "codeigniter": {
+    "peak_memory_bytes": 545856,
+    "included_files": 98
+  },
+  "symfony": {
+    "peak_memory_bytes": 516272,
+    "included_files": 198
+  },
+  "laravel": {
+    "peak_memory_bytes": 652800,
+    "included_files": 338
+  }
+}

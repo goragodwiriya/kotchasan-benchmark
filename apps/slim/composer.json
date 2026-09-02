@@ -1,0 +1,13 @@
+{
+    "name": "bench/slim",
+    "description": "Slim 4 benchmark app",
+    "require": {
+        "php": ">=8.2",
+        "slim/slim": "^4.14",
+        "slim/psr7": "^1.7"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "platform-check": false
+    }
+}

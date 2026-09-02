@@ -1,0 +1,179 @@
+{
+  "started_at": "2026-09-02T07:55:19.344Z",
+  "params": {
+    "RUNS": 5,
+    "DURATION": 10,
+    "WARMUP": 8,
+    "CONNECTIONS": 128
+  },
+  "host": {
+    "cpu": "AMD Ryzen 5 7535HS with Radeon Graphics",
+    "cores": 12,
+    "mem_total_gb": 62,
+    "kernel": "6.8.0-138-generic",
+    "node": "v22.18.0",
+    "loadavg_start": [
+      20.21,
+      19.75,
+      18.81
+    ]
+  },
+  "docker": {
+    "version": "Docker version 29.1.3, build 29.1.3-0ubuntu3~24.04.2",
+    "compose": "Docker Compose version v2.39.4",
+    "images": [
+      [
+        {
+          "ID": "sha256:4d22af1a3eda00571b334e7ec7051b8feaa91a9a36c89d5556c20a3580a2d8e7",
+          "ContainerName": "kotchasan-benchmark-symfony-1",
+          "Repository": "kotchasan-benchmark-symfony",
+          "Tag": "latest",
+          "Platform": "linux/amd64",
+          "Size": 191931940,
+          "LastTagTime": "2026-09-02T02:37:58.356946709Z"
+        },
+        {
+          "ID": "sha256:869218921e61d6c3c89820955d63cca42971f0e3e6c1e2792247bbd944ebc6e9",
+          "ContainerName": "kotchasan-benchmark-db-1",
+          "Repository": "mysql",
+          "Tag": "8.4.6",
+          "Platform": "linux/amd64",
+          "Size": 236868527,
+          "LastTagTime": "2026-09-02T02:17:31.620505168Z"
+        },
+        {
+          "ID": "sha256:981903497062e9fd215a06490f2f449fa9fa63ec93ccfcac7f0426f7305ca231",
+          "ContainerName": "kotchasan-benchmark-slim-1",
+          "Repository": "kotchasan-benchmark-slim",
+          "Tag": "latest",
+          "Platform": "linux/amd64",
+          "Size": 188617311,
+          "LastTagTime": "2026-09-02T02:37:54.420206918Z"
+        },
+        {
+          "ID": "sha256:8adbdcb969e2676478ee2c7ad333956f0c8e0e4c5a7463f4611d7a2e7a7ff5dc",
+          "ContainerName": "kotchasan-benchmark-nginx-1",
+          "Repository": "nginx",
+          "Tag": "1.29.1",
+          "Platform": "linux/amd64",
+          "Size": 72319283,
+          "LastTagTime": "2026-09-02T02:17:24.353273906Z"
+        },
+        {
+          "ID": "sha256:f16d6beba34893acfd2fd659461d5d52b1374e0db7d2236240aa7382a09d6cab",
+          "ContainerName": "kotchasan-benchmark-kotchasan-1",
+          "Repository": "kotchasan-benchmark-kotchasan",
+          "Tag": "latest",
+          "Platform": "linux/amd64",
+          "Size": 188622284,
+          "LastTagTime": "2026-09-02T02:37:51.033987338Z"
+        },
+        {
+          "ID": "sha256:43c9676d9872da11caf7a679802e6cb76ca4a62865c8501e64a34ac4560cb597",
+          "ContainerName": "kotchasan-benchmark-laravel-1",
+          "Repository": "kotchasan-benchmark-laravel",
+          "Tag": "latest",
+          "Platform": "linux/amd64",
+          "Size": 200207438,
+          "LastTagTime": "2026-09-02T02:38:01.681817962Z"
+        },
+        {
+          "ID": "sha256:0e310ae008695e9ea5a02e8ed72747830347e1f7afafbf2865482353dd27bdcd",
+          "ContainerName": "kotchasan-benchmark-plain-1",
+          "Repository": "kotchasan-benchmark-plain",
+          "Tag": "latest",
+          "Platform": "linux/amd64",
+          "Size": 188311988,
+          "LastTagTime": "2026-09-02T02:37:50.757050468Z"
+        },
+        {
+          "ID": "sha256:93d443a901533d46117005e76be2d0bac4fc9ebe6ead2e9ff1f19d0225ced118",
+          "ContainerName": "kotchasan-benchmark-codeigniter-1",
+          "Repository": "kotchasan-benchmark-codeigniter",
+          "Tag": "latest",
+          "Platform": "linux/amd64",
+          "Size": 190365233,
+          "LastTagTime": "2026-09-02T02:37:56.594724934Z"
+        }
+      ]
+    ]
+  },
+  "git_commit": "53be07e0b87d8b6c45e7f1a0f0e604bb83dbd65c",
+  "git_dirty": true,
+  "app_sizes_bytes": {
+    "plain-php": null,
+    "kotchasan": 1707057,
+    "slim": 922418,
+    "codeigniter": 5248017,
+    "symfony": 9310723,
+    "laravel": 32005231
+  },
+  "info": {
+    "plain-php": {
+      "peak_memory_bytes": 2097152,
+      "included_files": 2
+    },
+    "kotchasan": {
+      "peak_memory_bytes": 2097152,
+      "included_files": 27
+    },
+    "slim": {
+      "peak_memory_bytes": 2097152,
+      "included_files": 79
+    },
+    "codeigniter": {
+      "peak_memory_bytes": 2097152,
+      "included_files": 98
+    },
+    "symfony": {
+      "peak_memory_bytes": 2097152,
+      "included_files": 198
+    },
+    "laravel": {
+      "peak_memory_bytes": 2097152,
+      "included_files": 338
+    }
+  },
+  "frameworks": [
+    {
+      "id": "plain-php",
+      "name": "PHP (no framework)",
+      "package": null,
+      "version": null
+    },
+    {
+      "id": "kotchasan",
+      "name": "Kotchasan",
+      "package": null,
+      "version": "7.0.0"
+    },
+    {
+      "id": "slim",
+      "name": "Slim",
+      "package": "slim/slim",
+      "version": "4.15.3"
+    },
+    {
+      "id": "codeigniter",
+      "name": "CodeIgniter",
+      "package": "codeigniter4/framework",
+      "version": "v4.7.4"
+    },
+    {
+      "id": "symfony",
+      "name": "Symfony",
+      "package": "symfony/framework-bundle",
+      "version": "v8.1.6"
+    },
+    {
+      "id": "laravel",
+      "name": "Laravel",
+      "package": "laravel/framework",
+      "version": "v13.30.1"
+    }
+  ],
+  "load_tool": {
+    "name": "autocannon",
+    "version": "8.0.0"
+  }
+}

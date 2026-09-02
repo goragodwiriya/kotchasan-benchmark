@@ -1,0 +1,8 @@
+node_modules/
+bench/node_modules/
+# Per-request raw autocannon JSON is large; the aggregated artifacts
+# (summary.json, meta.json, info.json, report.md, summary.csv) are committed.
+results/raw/*/raw/
+apps/*/vendor/
+apps/*/composer.phar
+*.log

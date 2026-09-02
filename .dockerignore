@@ -1,0 +1,8 @@
+.git
+node_modules
+bench
+results
+apps/*/vendor
+apps/*/.phpunit.cache
+apps/*/writable/cache
+apps/*/var/cache

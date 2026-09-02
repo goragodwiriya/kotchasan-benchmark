@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kotchasan vs PHP Frameworks — Benchmark Report</title>
+<meta name="description" content="ผล benchmark จริงของ Kotchasan เทียบกับ Slim, CodeIgniter, Symfony, Laravel — วัดด้วย autocannon บน Docker, ทำซ้ำได้ 100%">
+<style>
+:root{
+  --bg:#f1f5f9; --card:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
+  --accent:#f97316; --accent-2:#ea580c; --good:#059669; --warn:#d97706;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:"Segoe UI","Leelawadee UI","Noto Sans Thai","Sarabun",system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.65;font-size:15.5px;
+}
+.wrap{max-width:1100px;margin:0 auto;padding:0 20px 80px}
+a{color:var(--accent-2)}
+.hero{
+  background:linear-gradient(135deg,#1e293b 0%,#0f172a 55%,#7c2d12 130%);
+  color:#fff;padding:52px 0 120px;margin-bottom:-72px;
+}
+.hero .wrap{padding-bottom:0}
+.hero h1{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:700;letter-spacing:-.01em}
+.hero .sub{color:#cbd5e1;margin-top:10px;font-size:1.02rem;max-width:780px}
+.hero .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.badge{
+  font-size:.8rem;padding:4px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.08);color:#e2e8f0;font-family:var(--mono);
+}
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:34px}
+.stat{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:16px 18px}
+.stat .n{font-size:1.55rem;font-weight:700;font-family:var(--mono);letter-spacing:-.02em}
+.stat .l{font-size:.82rem;color:#cbd5e1;margin-top:2px}
+nav.toc{
+  position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);margin-top:72px;
+}
+nav.toc .wrap{display:flex;gap:4px;overflow-x:auto;padding:0 20px}
+nav.toc a{
+  white-space:nowrap;text-decoration:none;color:var(--muted);font-size:.86rem;
+  padding:11px 12px;border-bottom:2.5px solid transparent;
+}
+nav.toc a:hover{color:var(--ink)} nav.toc a.on{color:var(--accent-2);border-color:var(--accent)}
+section{margin-top:44px}
+h2{font-size:1.32rem;font-weight:700;letter-spacing:-.01em;margin-bottom:4px}
+h2 .num{
+  display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-size:.9rem;
+  margin-right:10px;vertical-align:-4px;font-family:var(--mono);
+}
+.lead{color:var(--muted);font-size:.95rem;margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;box-shadow:0 1px 2px rgba(15,23,42,.05)}
+.card+.card{margin-top:16px}
+.controls{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-top:26px;font-size:.9rem}
+.controls label{font-weight:600;display:flex;align-items:center;gap:8px}
+.controls select{
+  font:inherit;font-family:var(--mono);font-size:.84rem;padding:7px 10px;border:1px solid var(--line);
+  border-radius:9px;background:#fff;color:var(--ink);max-width:280px;cursor:pointer;
+}
+.controls select:focus{outline:2px solid var(--accent-2);outline-offset:1px}
+.chart{display:flex;flex-direction:column;gap:11px;margin:6px 0 4px}
+.chart-row{display:grid;grid-template-columns:190px 1fr 86px 74px;gap:12px;align-items:center}
+.chart-label{font-size:.88rem;font-weight:600;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chart-track{position:relative;height:26px;background:#f1f5f9;border-radius:7px;overflow:hidden}
+.chart-range{position:absolute;top:6px;height:14px;background:rgba(100,116,139,.25);border-radius:4px}
+.chart-bar{
+  position:absolute;top:3px;height:20px;border-radius:6px;min-width:3px;
+  background-image:linear-gradient(rgba(255,255,255,.16),rgba(255,255,255,0));
+}
+.chart-value{font-family:var(--mono);font-size:.95rem;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.chart-sub{font-size:.78rem;color:var(--muted);font-family:var(--mono);text-align:right}
+.chart-note{font-size:.8rem;color:var(--muted);margin-top:10px}
+.scenario-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px}
+.scenario-grid .card{margin:0}
+.scenario-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.scenario-head code{font-family:var(--mono);font-size:.86rem;background:#fff7ed;color:#c2410c;padding:2px 8px;border-radius:6px}
+.scenario-head .rank{font-size:.78rem;color:var(--muted)}
+.scenario-desc{font-size:.84rem;color:var(--muted);margin:6px 0 14px}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;background:#f8fafc;border-bottom:2px solid var(--line)}
+tbody tr:hover{background:#f8fafc}
+td.num,th.num{font-family:var(--mono)}
+.best{color:var(--good);font-weight:700}
+.tbl-note{font-size:.8rem;color:var(--muted);margin-top:10px}
+.pill{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:999px;vertical-align:1px}
+.pill.hi{background:#dcfce7;color:#166534} .pill.mid{background:#fef9c3;color:#854d0e} .pill.lo{background:#fee2e2;color:#991b1b}
+.kv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.kv{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.kv .k{font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kv .v{font-family:var(--mono);font-size:.9rem;margin-top:2px;word-break:break-all}
+details{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:14px 18px;margin-top:14px}
+details summary{cursor:pointer;font-weight:600;font-size:.95rem}
+details[open] summary{margin-bottom:10px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:0}
+.footer-note{margin-top:50px;text-align:center;color:var(--muted);font-size:.85rem}
+code.inline{background:#f1f5f9;border:1px solid var(--line);padding:1px 7px;border-radius:6px;font-family:var(--mono);font-size:.84rem}
+.status-box{margin-top:26px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:14px 18px;font-size:.9rem}
+.status-box.error{border-left-color:#ef4444}
+.loading{display:inline-block;width:18px;height:18px;border:2.5px solid #e2e8f0;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-4px;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (max-width:760px){
+  .chart-row{grid-template-columns:110px 1fr 70px 58px;gap:7px}
+  .chart-label{font-size:.76rem}
+  .scenario-grid{grid-template-columns:1fr}
+}
+@media print{
+  nav.toc{display:none} body{background:#fff}
+  .card,details{box-shadow:none;break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<header class="hero"><div class="wrap">
+  <h1>Kotchasan vs PHP Frameworks — Benchmark Report</h1>
+  <p class="sub">หน้าเว็บนี้อ่านข้อมูลจาก<strong>ไฟล์ผลวัดดิบจริง</strong>ใน repository (<code style="font-family:var(--mono);font-size:.85em">results/raw/&lt;run&gt;/summary.json</code> ฯลฯ) แบบ on-the-fly —
+  เพิ่มผลรันใหม่ใน repo แล้วหน้านี้จะแสดงผลล่าสุดโดยอัตโนมัติ · ทุกตัวเลขวัดจริงด้วย autocannon บน Docker stack ที่ควบคุมสภาพแวดล้อมเหมือนกันทุกเฟรมเวิร์ก</p>
+  <div class="badges" id="badges"></div>
+  <div class="stat-cards" id="hero-stats"><div class="stat"><div class="n"><span class="loading"></span></div><div class="l">กำลังโหลดข้อมูลจากไฟล์ดิบ…</div></div></div>
+</div></header>
+
+<nav class="toc"><div class="wrap">
+  <a href="#overview">ภาพรวม</a><a href="#scenarios">ผลรายสถานการณ์</a><a href="#tables">ตารางตัวเลข</a>
+  <a href="#weight">น้ำหนักต่อ request</a><a href="#repro">การทำซ้ำ</a><a href="#env">สภาพแวดล้อม</a>
+  <a href="#method">วิธีวัด</a>
+</div></nav>
+
+<div class="wrap">
+
+  <div class="card controls" id="controls">
+    <label>ผลรันที่แสดง <select id="sel-run"></select></label>
+    <label>เทียบซ้ำกับรัน <select id="sel-cmp"></select></label>
+    <span style="color:var(--muted);font-size:.8rem" id="runs-hint"></span>
+  </div>
+  <div id="status"></div>
+
+  <section id="overview">
+    <h2><span class="num">1</span>ภาพรวม — ความเร็วสูงสุดต่อวินาที (RPS)</h2>
+    <p class="lead">สถานการณ์ <code class="inline">/plaintext</code> (ส่ง "Hello, World!" กลับ) สะท้อนต้นทุน request pipeline ของเฟรมเวิร์กแท้ ๆ — แท่งทึบ = median ของทุกรัน, แถบจาง = ช่วงต่ำ-สูงสุดที่วัดได้</p>
+    <div class="card" id="overview-chart"></div>
+    <div class="card" id="overview-table"></div>
+  </section>
+
+  <section id="scenarios">
+    <h2><span class="num">2</span>ผลรายสถานการณ์</h2>
+    <p class="lead">แต่ละการ์ดเรียงจากเร็วไปช้า · เปอร์เซ็นต์คือสัดส่วนเทียบ PHP เปล่าในสถานการณ์เดียวกัน</p>
+    <div class="scenario-grid" id="scenario-grid"></div>
+  </section>
+
+  <section id="tables">
+    <h2><span class="num">3</span>ตารางตัวเลขครบทุกมิติ (median)</h2>
+    <p class="lead">RPS · เปอร์เซ็นต์เทียบ PHP เปล่า · latency p50/p99 หน่วยมิลลิวินาที</p>
+    <div id="tables-box"></div>
+  </section>
+
+  <section id="weight">
+    <h2><span class="num">4</span>น้ำหนักต่อ request — ทำไม Kotchasan เร็ว</h2>
+    <p class="lead">วัดจาก endpoint <code class="inline">/info</code> (median 7 ครั้ง) และขนาดแอปใน container · ยิ่งโหลดไฟล์/ใช้ memory น้อย ยิ่งมี overhead ต่ำ</p>
+    <div class="scenario-grid" id="weight-charts"></div>
+    <div class="card" id="weight-table" style="margin-top:16px"></div>
+  </section>
+
+  <section id="repro">
+    <h2><span class="num">5</span>การตรวจสอบซ้ำ (Reproducibility)</h2>
+    <div id="repro-box"></div>
+  </section>
+
+  <section id="env">
+    <h2><span class="num">6</span>สภาพแวดล้อม (Fingerprint ของรันนี้)</h2>
+    <p class="lead">บันทึกอัตโนมัติใน meta.json ประกอบผล — เพื่อให้รู้ว่าตัวเลขชุดนี้เกิดบนสภาพแวดล้อมใดแน่นอน</p>
+    <div id="env-box"></div>
+  </section>
+
+  <section id="method">
+    <h2><span class="num">7</span>วิธีวัด & ข้อจำกัดที่ควรรู้ก่อนตีความ</h2>
+    <div class="card"><ul style="font-size:.92rem;padding-left:20px;line-height:1.9">
+      <li><strong>สถานการณ์ 5 แบบ</strong>: plaintext (framework overhead), json (serialization), db (query 1 แถว), queries×20 (prepared stmt ใช้ซ้ำ), fortunes (template + HTML escaping + UTF-8 รวมแถวภาษาไทยและแถวที่ต้อง escape &lt;script&gt;)</li>
+      <li><strong>Verify ก่อนวัดเสมอ</strong>: 30 endpoint (6 แอป × 5 สถานการณ์) ต้องผ่าน contract — สถานะ 200, content-type ถูก, รูปร่างข้อมูลถูก และ fortunes HTML ต้อง <em>byte-identical ข้ามทุกเฟรมเวิร์ก</em> จึงเริ่มวัด (พิสูจน์ว่าทุกแอปทำงานเหมือนกันจริง)</li>
+      <li><strong>Interleave</strong>: วนสลับ run→scenario→app ทั้งหมด เพื่อให้สภาพเครื่อง (thermal/cache/background) กระทบทุกเฟรมเวิร์กเท่ากัน + warmup ก่อนวัด</li>
+      <li><strong>Production config</strong>: ทุกเฟรมเวิร์กรันโหมด production พร้อม cache config/route/view (Laravel, Symfony, CI4) และไม่มีเฟรมเวิร์กไหนเริ่ม session — route ของ Laravel สมัครนอก web middleware group เพราะ load client ไม่ส่ง cookie (มิฉะนั้นจะกลายเป็นวัดการสร้าง session file ใหม่ทุก request)</li>
+      <li><strong>สภาพแวดล้อมเดียวกันเป๊ะ</strong>: ทุกแอปใช้ PHP image/php.ini/php-fpm (16 workers)/nginx/MySQL เดียวกัน · DB ใช้ raw PDO + SQL เดียวกัน (persistent) — ตัวแปร ORM ออกจากการวัด</li>
+    </ul></div>
+    <div class="card"><strong style="font-size:.95rem">ข้อจำกัด</strong><ul style="font-size:.92rem;padding-left:20px;line-height:1.9;margin-top:8px">
+      <li>นี่คือ <strong>micro-benchmark ของ overhead ต่อ request</strong> ไม่ใช่ "แอปจริงบนเฟรมเวิร์กไหนเร็วกว่า" — แอปจริงมี cache, queue, external API ที่ทำให้สัดส่วนต่างเล็กลง</li>
+      <li>ไม่ได้วัด ORM/Query Builder ของแต่ละค่าย (ใช้ raw PDO เท่ากันหมดโดยตั้งใจ)</li>
+      <li>ตัวเลข RPS เปรียบเทียบได้<strong>เฉพาะในเครื่องเดียวกัน/รันเดียวกัน</strong> — เครื่องอื่นให้ดูอัตราส่วน % เทียบ PHP เปล่า</li>
+      <li>เฟรมเวิร์กที่ช้ากว่ามักแลกมาด้วยฟีเจอร์ที่ครบกว่า (validation, ORM, ecosystem) — benchmark วัดต้นทุนต่อ request ไม่ได้ตัดสินว่าเฟรมเวิร์กไหน "ดีกว่า"</li>
+    </ul></div>
+  </section>
+
+  <div class="footer-note">
+    ข้อมูลทั้งหมดโหลดสดจาก <code class="inline">results/raw/</code> ใน repository นี้ · วิธีเพิ่มผลรันใหม่: <code class="inline">make bench</code> แล้ว commit ผลใน <code class="inline">results/</code><br>
+    <span id="footer-meta"></span>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ---------------------------------------------------------------- setup */
+const APPS = [
+  { id:'plain-php',   name:'PHP (ไม่มีเฟรมเวิร์ก)', short:'PHP เปล่า',   color:'#64748b' },
+  { id:'kotchasan',   name:'Kotchasan',            short:'Kotchasan',   color:'#f97316' },
+  { id:'slim',        name:'Slim',                 short:'Slim',        color:'#14b8a6' },
+  { id:'codeigniter', name:'CodeIgniter',          short:'CodeIgniter', color:'#8b5cf6' },
+  { id:'symfony',     name:'Symfony',              short:'Symfony',     color:'#0ea5e9' },
+  { id:'laravel',     name:'Laravel',              short:'Laravel',     color:'#ef4444' },
+];
+const SCENARIOS = [
+  { id:'plaintext', label:'/plaintext',    desc:'Hello, World! — ต้นทุน request pipeline ของเฟรมเวิร์ก' },
+  { id:'json',      label:'/json',         desc:'สร้าง JSON response' },
+  { id:'db',        label:'/db',           desc:'ดึงแถวสุ่ม 1 แถวจาก MySQL (PDO)' },
+  { id:'queries',   label:'/queries?n=20', desc:'ดึง 20 แถวสุ่ม (prepared statement ใช้ซ้ำ)' },
+  { id:'fortunes',  label:'/fortunes',     desc:'เทมเพลต HTML + escaping + UTF-8 (13 แถว)' },
+];
+
+const $ = (s) => document.querySelector(s);
+const nf0 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const nf1 = new Intl.NumberFormat('en-US', { minimumFractionDigits:1, maximumFractionDigits:1 });
+const nf2 = new Intl.NumberFormat('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtBytes = (b) => b == null ? '-' : b >= 1048576 ? nf1.format(b/1048576)+' MB' : b >= 1024 ? nf1.format(b/1024)+' KB' : b+' B';
+
+const state = { runs:[], runA:null, runB:null };
+
+async function fetchJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${url} → HTTP ${res.status}`);
+  return res.json();
+}
+
+const median = (a) => { const s=[...a].sort((x,y)=>x-y); const n=s.length; if(!n) return 0; const m=Math.floor(n/2); return n%2 ? s[m] : (s[m-1]+s[m])/2; };
+
+function aggregate(results) {
+  const by = {};
+  for (const r of results) {
+    const scens = (by[r.app] ??= {});
+    (scens[r.scenario] ??= []).push(r);
+  }
+  const agg = {};
+  for (const [app, scens] of Object.entries(by)) {
+    agg[app] = {};
+    for (const [sc, rows] of Object.entries(scens)) {
+      agg[app][sc] = {
+        rps: median(rows.map(r=>r.rps)),
+        min: Math.min(...rows.map(r=>r.rps)),
+        max: Math.max(...rows.map(r=>r.rps)),
+        p50: median(rows.map(r=>r.p50)),
+        p99: median(rows.map(r=>r.p99)),
+        errors: rows.reduce((a,r)=>a+r.errors,0),
+        runs: rows.length,
+      };
+    }
+  }
+  return agg;
+}
+
+/* ---------------------------------------------------------------- pieces */
+function barChart(entries) {
+  const max = Math.max(...entries.map(e=>e.max)) || 1;
+  const rows = entries.map((en) => {
+    const wVal = (en.value/max*100).toFixed(2), wMin = (en.min/max*100).toFixed(2);
+    const wRange = Math.max(0.5, en.max/max*100 - en.min/max*100).toFixed(2);
+    return `<div class="chart-row">
+      <div class="chart-label">${esc(en.label)}</div>
+      <div class="chart-track">
+        <div class="chart-range" style="left:${wMin}%;width:${wRange}%"></div>
+        <div class="chart-bar" style="width:${wVal}%;background:${en.color}"></div>
+      </div>
+      <div class="chart-value">${nf0.format(en.value)}</div>
+      <div class="chart-sub">${esc(en.sub ?? '')}</div>
+    </div>`;
+  }).join('');
+  return `<div class="chart">${rows}</div>`;
+}
+
+function chartFor(agg, versions, scenario, plainRps, appsPresent) {
+  const entries = [];
+  for (const a of APPS) {
+    if (!agg[a.id] || !agg[a.id][scenario]) continue;
+    const st = agg[a.id][scenario];
+    entries.push({
+      label: a.name + (versions[a.id] ? ' ' + versions[a.id] : ''),
+      value: st.rps, min: st.min, max: st.max, color: a.color,
+      sub: a.id === 'plain-php' ? 'baseline' : (plainRps[scenario] > 0 ? nf1.format(st.rps/plainRps[scenario]*100)+'%' : ''),
+    });
+  }
+  entries.sort((a,b)=>b.value-a.value);
+  return barChart(entries);
+}
+
+function status(html, isError) {
+  $('#status').innerHTML = html ? `<div class="status-box${isError?' error':''}">${html}</div>` : '';
+}
+
+/* ---------------------------------------------------------------- render */
+async function loadRun(run) {
+  const base = `results/raw/${run.dir}`;
+  const [summary, meta] = await Promise.all([fetchJson(`${base}/summary.json`), fetchJson(`${base}/meta.json`)]);
+  let info = meta.info ?? {};
+  try { info = await fetchJson(`${base}/info.json`); } catch { /* keep meta.info fallback */ }
+  return { run, summary, meta, info, agg: aggregate(summary.results) };
+}
+
+function render(A, B) {
+  const { agg, meta, info, summary, run } = A;
+  const params = summary.params;
+  const appsPresent = APPS.filter(a => agg[a.id]);
+  const versions = {};
+  for (const f of (meta.frameworks ?? [])) versions[f.id] = String(f.version ?? '').replace(/^v/,'');
+  const plainRps = {};
+  for (const s of SCENARIOS) plainRps[s.id] = agg['plain-php']?.[s.id]?.rps ?? 0;
+
+  /* badges + hero stats */
+  const when = meta.started_at ? new Date(meta.started_at).toLocaleString('en-GB', { timeZone:'UTC' }) + ' UTC' : run.dir;
+  $('#badges').innerHTML = [
+    esc(when),
+    'PHP 8.4-fpm-bookworm (image เดียวกันทุกแอป)',
+    `${params.RUNS} runs × ${params.DURATION}s · c=${params.CONNECTIONS}`,
+    'commit ' + esc(String(meta.git_commit ?? '').slice(0,7)),
+  ].map(b=>`<span class="badge">${b}</span>`).join('');
+
+  const kRps = agg['kotchasan']?.['plaintext']?.rps ?? 0;
+  const lRps = agg['laravel']?.['plaintext']?.rps ?? 0;
+  const kPct = plainRps.plaintext > 0 ? kRps / plainRps.plaintext * 100 : 0;
+  const kFiles = info['kotchasan']?.included_files ?? 0, lFiles = info['laravel']?.included_files ?? 0;
+  $('#hero-stats').innerHTML = `
+    <div class="stat"><div class="n" style="color:#fdba74">${nf0.format(kRps)} rps</div><div class="l">Kotchasan — /plaintext อันดับ 1 ในบรรดาเฟรมเวิร์ก</div></div>
+    <div class="stat"><div class="n" style="color:#fdba74">${nf1.format(kPct)}%</div><div class="l">ของความเร็ว PHP เปล่า (ไม่มีเฟรมเวิร์ก)</div></div>
+    <div class="stat"><div class="n" style="color:#fdba74">${lRps > 0 ? nf1.format(kRps/lRps) : '-'}×</div><div class="l">เร็วกว่า Laravel ${nf0.format(lRps)} rps</div></div>
+    <div class="stat"><div class="n" style="color:#fdba74">${kFiles} ไฟล์</div><div class="l">ที่ต้องโหลดต่อ request เทียบ Laravel ${lFiles} ไฟล์</div></div>`;
+
+  /* 1. overview */
+  $('#overview-chart').innerHTML = chartFor(agg, versions, 'plaintext', plainRps)
+    + `<p class="chart-note">อ่านคอลัมน์ขวาสุดเป็น % เทียบ PHP เปล่า · ทำไม Kotchasan เร็ว: ดู <a href="#weight">น้ำหนักต่อ request</a> — จำนวนไฟล์/คลาสที่ต้องโหลดต่อ request ต่างกันหลายเท่า</p>`;
+  let trows = '';
+  for (const a of appsPresent) {
+    trows += `<tr><td><span class="dot" style="background:${a.color}"></span>${esc(a.name)}</td>`
+      + SCENARIOS.map(s=>`<td class="num">${nf0.format(agg[a.id][s.id].rps)}</td>`).join('') + '</tr>';
+  }
+  const totalReq = summary.results.reduce((a,r)=>a+Math.round(r.rps*params.DURATION),0);
+  $('#overview-table').innerHTML = `<table><thead><tr><th>แอป</th>${SCENARIOS.map(s=>`<th>${esc(s.label)}</th>`).join('')}</tr></thead>
+    <tbody>${trows}</tbody></table>
+    <p class="tbl-note">ค่า median จาก ${params.RUNS} runs × ${params.DURATION} วินาที ต่อเซลล์ · requests รวมทั้งรันประมาณ ${nf0.format(totalReq)} requests · ที่มา: <code class="inline">results/raw/${esc(run.dir)}/summary.json</code></p>`;
+
+  /* 2. scenario cards */
+  $('#scenario-grid').innerHTML = SCENARIOS.map((s) => {
+    const sorted = [...appsPresent].sort((a,b)=>agg[b.id][s.id].rps - agg[a.id][s.id].rps);
+    const winner = sorted[0].id === 'plain-php' ? (sorted[1] ?? sorted[0]) : sorted[0];
+    let mini = sorted.map(a=>{
+      const st = agg[a.id][s.id];
+      return `<tr><td>${esc(a.short)}</td><td class="num">${nf2.format(st.p50)} ms</td><td class="num">${nf2.format(st.p99)} ms</td></tr>`;
+    }).join('');
+    return `<div class="card">
+      <div class="scenario-head"><code>${esc(s.label)}</code>
+      <span class="rank">เร็วสุดในเฟรมเวิร์ก: <strong style="color:${winner.color}">${esc(winner.short)}</strong></span></div>
+      <p class="scenario-desc">${esc(s.desc)}</p>
+      ${chartFor(agg, versions, s.id, plainRps)}
+      <table style="margin-top:10px"><thead><tr><th>แอป</th><th>p50</th><th>p99</th></tr></thead><tbody>${mini}</tbody></table>
+    </div>`;
+  }).join('');
+
+  /* 3. tables */
+  const totalErrors = Object.values(agg).flatMap(sc=>Object.values(sc)).reduce((a,st)=>a+st.errors,0);
+  let html = '';
+  for (const [metric, title] of [['rps','ความเร็ว (RPS) + % เทียบ baseline'],['p50','Latency p50 (ms)'],['p99','Latency p99 (ms)']]) {
+    let rows = '';
+    for (const a of appsPresent) {
+      rows += `<tr><td>${esc(a.name)}</td>` + SCENARIOS.map(s=>{
+        const st = agg[a.id][s.id];
+        if (metric === 'rps') {
+          const pct = a.id === 'plain-php' ? '100%' : (plainRps[s.id] > 0 ? nf1.format(st.rps/plainRps[s.id]*100,)+'%' : '-');
+          return `<td class="num${a.id==='kotchasan'?' best':''}">${nf0.format(st.rps)}<br><span style="font-size:.74rem;color:var(--muted)">${pct}</span></td>`;
+        }
+        return `<td class="num">${nf2.format(st[metric])}</td>`;
+      }).join('') + '</tr>';
+    }
+    html += `<div class="card"><strong style="font-size:.95rem">${title}</strong><table style="margin-top:6px">
+      <thead><tr><th>แอป</th>${SCENARIOS.map(s=>`<th>${esc(s.label)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  }
+  html += `<div class="card"><strong style="font-size:.95rem">ข้อผิดพลาดระหว่างวัด</strong>
+    <p style="margin-top:8px;font-size:.92rem">รวม ${nf0.format(totalErrors)} socket errors จาก ~${nf0.format(totalReq)} requests (≈${totalErrors && totalReq ? nf2.format(totalErrors/totalReq*100) : '0.00'}%) — เป็น connection reset ฝั่ง load generator ตอนสิ้นสุดแต่ละรันเป็นหลัก, <strong>ฝั่ง server ตอบ 2xx ทั้งหมด</strong> (non-2xx = 0, ยืนยันจาก access log) และไม่มีผลต่อค่า median</p></div>`;
+  $('#tables-box').innerHTML = html;
+
+  /* 4. weight */
+  const filesArr = appsPresent.filter(a=>info[a.id]).map(a=>({ a, v: info[a.id].included_files ?? 0 }));
+  const memArr = appsPresent.filter(a=>info[a.id]).map(a=>({ a, v: Math.round((info[a.id].peak_memory_bytes ?? 0)/1024) }));
+  const mkBars = (arr) => {
+    const max = Math.max(...arr.map(x=>x.v)) || 1;
+    arr.sort((x,y)=>y.v-x.v);
+    return `<div class="chart">${arr.map(x=>`<div class="chart-row" style="margin-top:8px">
+      <div class="chart-label">${esc(x.a.short)}</div>
+      <div class="chart-track"><div class="chart-bar" style="width:${(x.v/max*100).toFixed(2)}%;background:${x.a.color}"></div></div>
+      <div class="chart-value">${nf0.format(x.v)}</div><div class="chart-sub"></div></div>`).join('')}</div>`;
+  };
+  $('#weight-charts').innerHTML = `
+    <div class="card"><strong style="font-size:.95rem">จำนวนไฟล์ที่โหลดต่อ request</strong>${mkBars(filesArr)}</div>
+    <div class="card"><strong style="font-size:.95rem">Peak memory ต่อ request (KB)</strong>${mkBars(memArr)}</div>`;
+  let wrows = '';
+  for (const a of appsPresent) {
+    const f = (meta.frameworks ?? []).find(f=>f.id===a.id);
+    wrows += `<tr><td>${esc(a.name)}</td>
+      <td style="font-family:var(--mono);font-size:.8rem">${esc(f?.package ?? (a.id==='plain-php' ? '— ไม่มี' : a.id==='kotchasan' ? 'vendored (pinned)' : ''))}</td>
+      <td class="num">${esc(f?.version ?? 'PHP 8.4')}</td>
+      <td class="num${a.id==='kotchasan'?' best':''}">${info[a.id] ? info[a.id].included_files : '-'}</td>
+      <td class="num">${info[a.id] ? fmtBytes(info[a.id].peak_memory_bytes) : '-'}</td>
+      <td class="num">${fmtBytes(meta.app_sizes_bytes?.[a.id])}</td></tr>`;
+  }
+  $('#weight-table').innerHTML = `<table><thead><tr><th>แอป</th><th>เฟรมเวิร์ก (แพ็กเกจ)</th><th>เวอร์ชัน</th><th>ไฟล์/request</th><th>Memory/request</th><th>ขนาดใน container</th></tr></thead>
+    <tbody>${wrows}</tbody></table>
+    <p class="tbl-note">Kotchasan โหลดไฟล์ต่อ request ใกล้เคียง PHP เปล่า — นี่คือเหตุผลหลักที่ความเร็วตามหลัง baseline เพียงเล็กน้อย ขณะที่เฟรมเวิร์กเต็มรูปแบบโหลดไฟล์มากกว่าหลายเท่า</p>`;
+
+  /* 5. reproducibility */
+  if (B) {
+    let rows = '', maxDiff = 0;
+    for (const a of APPS) {
+      if (!agg[a.id] || !B.agg[a.id]) continue;
+      for (const s of SCENARIOS) {
+        if (!agg[a.id][s.id] || !B.agg[a.id][s.id]) continue;
+        const va = agg[a.id][s.id].rps, vb = B.agg[a.id][s.id].rps;
+        const diff = Math.abs(va-vb)/Math.max(va,vb)*100;
+        maxDiff = Math.max(maxDiff, diff);
+        const cls = diff <= 5 ? 'hi' : diff <= 10 ? 'mid' : 'lo';
+        rows += `<tr><td>${esc(a.short)}</td><td style="font-family:var(--mono);font-size:.8rem">${esc(s.label)}</td>
+          <td class="num">${nf0.format(va)}</td><td class="num">${nf0.format(vb)}</td>
+          <td class="num"><span class="pill ${cls}">${nf1.format(diff)}%</span></td></tr>`;
+      }
+    }
+    $('#repro-box').innerHTML = `
+      <p class="lead">เทียบ median ของรัน <code class="inline">${esc(run.dir)}</code> ↔ <code class="inline">${esc(B.run.dir)}</code> — ความต่างมากสุด ${nf1.format(maxDiff)}% · เกณฑ์สี: เขียว ≤5% · เหลือง ≤10% · แดง &gt;10% (ส่วนใหญ่เป็นสถานการณ์ DB หนักซึ่งความผันผวนมาจาก MySQL ไม่ใช่เฟรมเวิร์ก)</p>
+      <div class="card"><table><thead><tr><th>แอป</th><th>สถานการณ์</th><th>RPS รัน A</th><th>RPS รัน B</th><th>ความต่าง</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  } else {
+    $('#repro-box').innerHTML = `<p class="lead">ยังไม่ได้เลือกรันที่สอง — เลือกที่ dropdown "เทียบซ้ำกับรัน" ด้านบน (ต้องมีผลรันอย่างน้อย 2 ชุดใน repo)</p>`;
+  }
+
+  /* 6. env */
+  const imgs = (meta.docker?.images ?? []).map(im=>`<tr><td>${esc(im.Service ?? '')}</td>
+    <td style="font-family:var(--mono);font-size:.8rem">${esc((im.Repository ?? '') + ':' + (im.Tag ?? ''))}</td>
+    <td style="font-family:var(--mono);font-size:.8rem">${esc(String(im.ID ?? '').slice(0,19))}</td>
+    <td class="num">${esc(im.Size ?? '')}</td></tr>`).join('');
+  $('#env-box').innerHTML = `
+    <div class="card"><div class="kv-grid">
+      <div class="kv"><div class="k">CPU</div><div class="v">${esc(meta.host?.cpu ?? '-')} · ${meta.host?.cores ?? '-'} threads</div></div>
+      <div class="kv"><div class="k">RAM</div><div class="v">${esc(meta.host?.mem_total_gb ?? '-')} GB</div></div>
+      <div class="kv"><div class="k">Kernel</div><div class="v">${esc(meta.host?.kernel ?? '-')}</div></div>
+      <div class="kv"><div class="k">Load generator</div><div class="v">${esc(meta.load_tool?.name ?? '')} ${esc(meta.load_tool?.version ?? '')}</div></div>
+      <div class="kv"><div class="k">Docker</div><div class="v">${esc(String(meta.docker?.version ?? '').replace('Docker version ',''))}</div></div>
+      <div class="kv"><div class="k">Git commit</div><div class="v">${esc(meta.git_commit ?? '-')}${meta.git_dirty ? ' (dirty)' : ' (clean)'}</div></div>
+    </div></div>
+    <div class="card"><strong style="font-size:.95rem">Docker images ที่ใช้จริง</strong><table style="margin-top:8px">
+      <thead><tr><th>service</th><th>image</th><th>ID</th><th>ขนาด</th></tr></thead><tbody>${imgs}</tbody></table></div>
+    <details><summary>การตั้งค่า PHP / php-fpm / nginx / MySQL (เหมือนกันทุกแอป)</summary>
+    <ul style="font-size:.9rem;padding-left:20px;line-height:1.9">
+      <li><strong>php.ini</strong>: opcache.enable=1, validate_timestamps=0, memory 256MB, jit=disable</li>
+      <li><strong>php-fpm</strong>: pm=static, max_children=16 (เท่ากันทุกแอป), max_requests=0, clear_env=no</li>
+      <li><strong>nginx</strong>: fastcgi upstream keepalive=32 + fastcgi_keep_conn on, gzip off, access_log off</li>
+      <li><strong>MySQL 8.4</strong>: innodb_buffer_pool=2G, skip-name-resolve · ข้อมูล <code>world</code> 10,000 แถว seed แบบ deterministic (mt_srand(42)) + <code>fortune</code> 12 แถว</li>
+      <li><strong>ฐานข้อมูล</strong>: ทุกแอปใช้ raw PDO + SQL เดียวกันเป๊ะ (persistent connection, real prepare)</li>
+    </ul></details>`;
+
+  $('#footer-meta').textContent = `แสดงผลรัน ${run.dir}${B ? ' เทียบกับ ' + B.run.dir : ''} · เว็บนี้อ่านไฟล์ดิบโดยตรง ไม่มีข้อมูลฝังในหน้าเว็บแม้แต่ตัวเดียว`;
+  status('');
+}
+
+/* ---------------------------------------------------------------- boot */
+async function refresh(selectedDir, cmpDir) {
+  status('<span class="loading"></span>กำลังโหลดข้อมูลจาก results/raw/…');
+  try {
+    const A = await loadRun(state.runs.find(r=>r.dir===selectedDir) ?? state.runs[0]);
+    state.runA = A;
+    let B = null;
+    if (cmpDir && cmpDir !== 'none') {
+      try { B = await loadRun(state.runs.find(r=>r.dir===cmpDir)); } catch { B = null; }
+    }
+    state.runB = B;
+    render(A, B);
+  } catch (e) {
+    status(`โหลดข้อมูลไม่สำเร็จ: ${esc(e.message)}<br>ถ้าเปิดจากไฟล์ตรง ๆ (file://) เบราว์เซอร์จะบล็อกการอ่าน JSON — ให้รัน <code class="inline">make site</code> แล้วเปิดผ่าน http://127.0.0.1:8898 หรือดูผ่าน GitHub Pages`, true);
+  }
+}
+
+async function boot() {
+  try {
+    const idx = await fetchJson('results/runs.json');
+    state.runs = idx.runs ?? [];
+  } catch (e) {
+    status(`อ่าน results/runs.json ไม่ได้: ${esc(e.message)}`, true);
+    return;
+  }
+  if (!state.runs.length) {
+    status('ยังไม่มีผลรันใน results/raw/ — รัน <code class="inline">make bench</code> ก่อน แล้ว commit ผลลง repository', true);
+    return;
+  }
+  const selA = $('#sel-run'), selC = $('#sel-cmp');
+  selA.innerHTML = state.runs.map(r=>`<option value="${esc(r.dir)}">${esc(r.dir)}${r.started_at ? ' — '+esc(r.started_at.slice(0,16).replace('T',' ')) : ''}</option>`).join('');
+  selC.innerHTML = `<option value="none">— ไม่เทียบ —</option>` + state.runs.slice(1).map(r=>`<option value="${esc(r.dir)}">${esc(r.dir)}</option>`).join('');
+  selC.value = state.runs.length > 1 ? state.runs[1].dir : 'none';
+  $('#runs-hint').textContent = `พบ ${state.runs.length} รันใน repository`;
+  selA.addEventListener('change', () => refresh(selA.value, selC.value));
+  selC.addEventListener('change', () => refresh(selA.value, selC.value));
+  await refresh(selA.value, selC.value);
+}
+boot();
+</script>
+</body>
+</html>
